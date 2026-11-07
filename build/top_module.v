@@ -10,6 +10,35 @@ module top_module #(parameter integer K = 3)(
 
     // Logica del circuito
 
+    // CLOCK DIVIDER DE 3 HZ
+    wire clk_3hz;
+
+    CLOCK_DIVIDER DIVISOR (
+        .clk(clk),
+        .clk_3hz(clk_3hz)
+    );
+
+    // SALIDAS DEL REGISTRO
+    wire Q0, Q1, Q2, Q3, Q4;
+
+    // REGISTRO SERIAL DE 5 BITS
+    registro_serial_5bits REGISTRO (
+        .CLK(clk_3hz),
+        .RST(rst),
+        .EN(en),
+        .START(cmd[0]),
+        .VALID(cmd[1]),
+        .BIT_IN(cmd[2]),
+        .Q0(Q0),
+        .Q1(Q1),
+        .Q2(Q2),
+        .Q3(Q3),
+        .Q4(Q4)
+    );
+
+    // SALIDAS PROVISIONALES PARA VER LOS 5 BITS
+    assign y = {11'b0, Q4, Q3, Q2, Q1, Q0};
+
 
 endmodule
 
