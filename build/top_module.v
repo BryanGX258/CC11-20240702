@@ -177,3 +177,28 @@ module XOR_5BITS (
     xor XOR4 (RESULTADO, X3, E);
 
 endmodule
+
+module REGISTRO_4BITS (
+    input wire CLK,
+    input wire RST,
+    input wire OK,
+    input wire D0, D1, D2, D3,
+    output reg Q0, Q1, Q2, Q3
+);
+
+    always @(posedge CLK) begin
+        if (RST) begin
+            Q0 <= 1'b0;
+            Q1 <= 1'b0;
+            Q2 <= 1'b0;
+            Q3 <= 1'b0;
+        end
+        else if (OK) begin
+            Q0 <= D0;
+            Q1 <= D1;
+            Q2 <= D2;
+            Q3 <= D3;
+        end
+    end
+
+endmodule
