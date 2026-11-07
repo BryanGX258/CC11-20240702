@@ -37,9 +37,20 @@ module top_module #(parameter integer K = 3)(
         .Q4(Q4)
     );
 
-    // SALIDAS PROVISIONALES PARA VER LOS 5 BITS
-    assign y = {11'b0, Q4, Q3, Q2, Q1, Q0};
+    // XOR DE 5 ENTRADAS
+    wire RESULTADO_XOR;
 
+    XOR_5BITS XOR_PARIDAD (
+        .A(Q0),
+        .B(Q1),
+        .C(Q2),
+        .D(Q3),
+        .E(Q4),
+        .RESULTADO(RESULTADO_XOR)
+    );
+
+    // SALIDAS PROVISIONALES PARA VER LOS 5 BITS
+    assign y = {10'b0, RESULTADO_XOR, Q4, Q3, Q2, Q1, Q0};
 
 endmodule
 
