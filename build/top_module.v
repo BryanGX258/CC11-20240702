@@ -152,3 +152,17 @@ module FLIP_FLOP_D (
     end
 
 endmodule
+// 5 xor de paridad que toman la salida del registro y la entrada de datos para generar un bit de paridad
+module XOR_5BITS (
+    input wire A, B, C, D, E,
+    output wire RESULTADO
+);
+
+    wire X1, X2, X3;
+
+    xor XOR1 (X1, A, B);
+    xor XOR2 (X2, C, D);
+    xor XOR3 (X3, X1, X2);
+    xor XOR4 (RESULTADO, X3, E);
+
+endmodule
