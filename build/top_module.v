@@ -47,7 +47,8 @@ module top_module #(parameter integer K = 3)(
     );
 
     // MAQUINA DE ESTADOS
-    wire FIN_TRAMA;
+wire FIN_TRAMA;
+wire busy;
 
     MAQUINA_ESTADOS_5BITS CONTROL (
         .CLK(clk_3hz),
@@ -55,8 +56,9 @@ module top_module #(parameter integer K = 3)(
         .EN(en),
         .START(cmd[0]),
         .VALID(cmd[1]),
-        .FIN_TRAMA(FIN_TRAMA)
-    );
+        .FIN_TRAMA(FIN_TRAMA),
+        .BUSY(busy)
+);
 
     // CALCULAR PARIDAD DE LOS 4 DATOS
     wire PARIDAD_CALCULADA;
@@ -113,7 +115,9 @@ module top_module #(parameter integer K = 3)(
     );
 
     // SALIDA PROVISIONAL DEL REGISTRO
-    assign y = {12'b0, N3, N2, N1, N0};
+    
+assign y = {9'b0, busy, error, done, N3, N2, N1, N0};
+
 
 endmodule
 
@@ -338,5 +342,5 @@ module MAQUINA_ESTADOS_5BITS (
     // SE ACTIVA AL LLEGAR EL QUINTO BIT
     assign FIN_TRAMA =
         (estado == BIT5) & VALID & EN & ~RST;
-
+assign BUSY = (estado != ESPERA);
 endmodule
