@@ -77,6 +77,22 @@ module top_module #(parameter integer K = 3)(
         GUARDAR, OK, FIN_TRAMA
     );
 
+    // LED DE ESTADO DONE Y ERROR
+
+    reg done;
+    reg error;
+
+    always @(posedge clk_3hz) begin
+        if (rst) begin
+            done  <= 1'b0;
+            error <= 1'b0;
+        end
+        else begin
+            done  <= GUARDAR;
+            error <= FIN_TRAMA & ~OK;
+        end
+    end
+
     // REGISTRO DE SALIDA DE 4 BITS
     wire N0, N1, N2, N3;
 
