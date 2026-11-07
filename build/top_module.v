@@ -11,6 +11,7 @@ module top_module #(parameter integer K = 3)(
     // Logica del circuito
 
     // CLOCK DIVIDER DE 3 HZ
+    // la funcion de este clk divider es reducir los 50mhz a 3hz para que el registro pueda tomar los bits de entrada a una velocidad adecuada y no se pierdan datos.
     wire clk_3hz;
 
     CLOCK_DIVIDER DIVISOR (
@@ -132,5 +133,22 @@ module registro_serial_5bits (
         .CLK(CLK), .RST(BORRAR),
         .EN(CAPTURAR), .D(Q3), .Q(Q4)
     );
+
+endmodule
+
+module FLIP_FLOP_D (
+    input wire CLK,
+    input wire RST,
+    input wire EN,
+    input wire D,
+    output reg Q
+);
+
+    always @(posedge CLK) begin
+        if (RST)
+            Q <= 1'b0;
+        else if (EN)
+            Q <= D;
+    end
 
 endmodule
