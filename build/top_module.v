@@ -1,4 +1,5 @@
 
+
 module top_module #(parameter integer K = 3)(
     input wire clk,
     input wire rst,
@@ -8,10 +9,7 @@ module top_module #(parameter integer K = 3)(
     output wire [15:0] y
 );
 
-    // Logica del circuito
-
     // CLOCK DIVIDER DE 3 HZ
-    // la funcion de este clk divider es reducir los 50mhz a 3hz para que el registro pueda tomar los bits de entrada a una velocidad adecuada y no se pierdan datos.
     wire clk_3hz;
 
     CLOCK_DIVIDER DIVISOR (
@@ -19,10 +17,9 @@ module top_module #(parameter integer K = 3)(
         .clk_3hz(clk_3hz)
     );
 
-    // SALIDAS DEL REGISTRO
+    // REGISTRO SERIAL DE 5 BITS
     wire Q0, Q1, Q2, Q3, Q4;
 
-    // REGISTRO SERIAL DE 5 BITS
     registro_serial_5bits REGISTRO (
         .CLK(clk_3hz),
         .RST(rst),
@@ -37,7 +34,7 @@ module top_module #(parameter integer K = 3)(
         .Q4(Q4)
     );
 
-    // XOR DE 5 ENTRADAS
+    // XOR ORIGINAL DE 5 BITS
     wire RESULTADO_XOR;
 
     XOR_5BITS XOR_PARIDAD (
@@ -49,10 +46,61 @@ module top_module #(parameter integer K = 3)(
         .RESULTADO(RESULTADO_XOR)
     );
 
-    // SALIDAS PROVISIONALES PARA VER LOS 5 BITS
-    assign y = {10'b0, RESULTADO_XOR, Q4, Q3, Q2, Q1, Q0};
+    // MAQUINA DE ESTADOS
+    wire FIN_TRAMA;
+
+    MAQUINA_ESTADOS_5BITS CONTROL (
+        .CLK(clk_3hz),
+        .RST(rst),
+        .EN(en),
+        .START(cmd[0]),
+        .VALID(cmd[1]),
+        .FIN_TRAMA(FIN_TRAMA)
+    );
+
+    // CALCULAR PARIDAD DE LOS 4 DATOS
+    wire PARIDAD_CALCULADA;
+    wire OK;
+    wire GUARDAR;
+
+    xor XOR_DATOS (
+        PARIDAD_CALCULADA, Q0, Q1, Q2, Q3
+    );
+
+    // XNOR: COMPARAR CON EL QUINTO BIT
+    xnor XNOR_CONFIRMACION (
+        OK, PARIDAD_CALCULADA, cmd[2]
+    );
+
+    // AND: CONFIRMAR GRABACION
+    and AND_GRABAR (
+        GUARDAR, OK, FIN_TRAMA
+    );
+
+    // REGISTRO DE SALIDA DE 4 BITS
+    wire N0, N1, N2, N3;
+
+    REGISTRO_4BITS REG_SALIDA (
+        .CLK(clk_3hz),
+        .RST(rst),
+        .OK(GUARDAR),
+
+        .D0(Q3),
+        .D1(Q2),
+        .D2(Q1),
+        .D3(Q0),
+
+        .Q0(N0),
+        .Q1(N1),
+        .Q2(N2),
+        .Q3(N3)
+    );
+
+    // SALIDA PROVISIONAL DEL REGISTRO
+    assign y = {12'b0, N3, N2, N1, N0};
 
 endmodule
+
 
 // clock divider de 3 hz provicional 
     module CLOCK_DIVIDER (
@@ -200,5 +248,76 @@ module REGISTRO_4BITS (
             Q3 <= D3;
         end
     end
+
+endmodule
+
+module MAQUINA_ESTADOS_5BITS (
+    input wire CLK,
+    input wire RST,
+    input wire EN,
+    input wire START,
+    input wire VALID,
+    output wire FIN_TRAMA
+);
+
+    // ESTADOS
+    localparam ESPERA = 3'd0;
+    localparam BIT1   = 3'd1;
+    localparam BIT2   = 3'd2;
+    localparam BIT3   = 3'd3;
+    localparam BIT4   = 3'd4;
+    localparam BIT5   = 3'd5;
+
+    reg [2:0] estado;
+
+    always @(posedge CLK) begin
+
+        if (RST)
+            estado <= ESPERA;
+
+        else if (EN) begin
+
+            case (estado)
+
+                ESPERA: begin
+                    if (START)
+                        estado <= BIT1;
+                end
+
+                BIT1: begin
+                    if (VALID)
+                        estado <= BIT2;
+                end
+
+                BIT2: begin
+                    if (VALID)
+                        estado <= BIT3;
+                end
+
+                BIT3: begin
+                    if (VALID)
+                        estado <= BIT4;
+                end
+
+                BIT4: begin
+                    if (VALID)
+                        estado <= BIT5;
+                end
+
+                BIT5: begin
+                    if (VALID)
+                        estado <= ESPERA;
+                end
+
+                default:
+                    estado <= ESPERA;
+
+            endcase
+        end
+    end
+
+    // SE ACTIVA AL LLEGAR EL QUINTO BIT
+    assign FIN_TRAMA =
+        (estado == BIT5) & VALID & EN & ~RST;
 
 endmodule
