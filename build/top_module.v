@@ -267,14 +267,17 @@ module REGISTRO_4BITS (
 
 endmodule
 
+
 module MAQUINA_ESTADOS_5BITS (
     input wire CLK,
     input wire RST,
     input wire EN,
     input wire START,
     input wire VALID,
-    output wire FIN_TRAMA
+    output wire FIN_TRAMA,
+    output wire BUSY
 );
+
 
     // ESTADOS
     localparam ESPERA = 3'd0;
